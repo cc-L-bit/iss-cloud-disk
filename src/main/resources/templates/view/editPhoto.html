@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <th:block th:include="common/commoncss :: commoncss"/>
+        <!-- bootstrap table css -->
+        <link th:href="@{/bootstrap/table/bootstrap-table.min.css}" rel="stylesheet" type="text/css">
+        <!-- modal css -->
+        <link th:href="@{/bootstrap/plugins/modal-effect/component.css}" rel="stylesheet" type="text/css">
+
+        <style>
+            img{
+                cursor: pointer;
+                transition: all 0.6s;
+            }
+            img:hover {
+                transform: scale(1.4);
+            }
+        </style>
+    </head>
+    <body class="fixed-left">
+        <!-- Begin page -->
+        <div id="wrapper">
+            <!-- Top Bar Start -->
+            <div th:include="common/topbar :: topbar" class="topbar"></div>
+            <!-- Top Bar End -->
+
+            <!-- Left Sidebar Start -->
+            <div th:include="common/sidebar :: sidebar" class="left side-menu"></div>
+            <!-- Left Sidebar End -->
+            <!-- Start right Content here -->
+            <div class="content-page">
+                <!-- Start content -->
+                <div class="content">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">
+                                            更换图像
+                                        </h3>
+                                    </div>
+                                    <div class="panel-body" style="position:relative;">
+                                        <div class="" style="position:absolute;top:20px;left:70%;">
+                                            <img  id="photo_editPhoto" value="" src="/disk/bootstrap/images/avatar-1.jpg" style="display:inline-block;width:220px;height:240px;object-fit:cover;">
+                                        </div>
+                                        <form id="userForm" class="form-horizontal" role="form" enctype="multipart/form-data">
+                                            <input id="id" name="id" type="hidden" th:value="${session.user.id}">
+                                            <ul>
+                                                <li>
+                                                </li>
+
+                                                <li>
+                                                        <img  id="male-1.jpg"  src="/disk/bootstrap/images/male-1.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="male-2.jpg"  src="/disk/bootstrap/images/male-2.jpg"  class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="male-3.jpg"  src="/disk/bootstrap/images/male-3.jpg"  class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="male-4.jpg"  src="/disk/bootstrap/images/male-4.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="male-5.jpg"  src="/disk/bootstrap/images/male-5.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="male-6.jpg"  src="/disk/bootstrap/images/male-6.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="male-7.jpg"  src="/disk/bootstrap/images/male-7.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+
+                                                </li>
+                                                <li>
+                                                </li>
+
+                                                <li>
+                                                        <img  id="remale-1.jpg"  src="/disk/bootstrap/images/remale-1.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="remale-2.jpg"  src="/disk/bootstrap/images/remale-2.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="remale-3.jpg"  src="/disk/bootstrap/images/remale-3.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="remale-4.jpg"  src="/disk/bootstrap/images/remale-4.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="remale-5.jpg"  src="/disk/bootstrap/images/remale-5.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="remale-6.jpg"  src="/disk/bootstrap/images/remale-6.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                        <img  id="avatar-1.jpg"  src="/disk/bootstrap/images/avatar-1.jpg" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                </li>
+
+                                                <li>
+                                                </li>
+
+                                                <li>
+
+                                                    <img  id="gaoxiao-1.gif"  src="/disk/bootstrap/images/gaoxiao-1.gif" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                    <img  id="gaoxiao-2.gif"  src="/disk/bootstrap/images/gaoxiao-2.gif" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                    <img  id="gaoxiao-3.gif"  src="/disk/bootstrap/images/gaoxiao-3.gif" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                    <img  id="gaoxiao-4.gif"  src="/disk/bootstrap/images/gaoxiao-4.gif" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                    <img  id="gaoxiao-5.gif"  src="/disk/bootstrap/images/gaoxiao-5.gif" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                    <img  id="gaoxiao-6.gif"  src="/disk/bootstrap/images/gaoxiao-6.gif" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                    <img  id="isoftstone.png"  src="/disk/bootstrap/images/isoftstone.png" class="thumb-md img-circle">&nbsp;&nbsp;&nbsp;
+                                                </li>
+
+
+                                            </ul>
+
+                                        </form>
+                                        <div class="col-lg-12" style="text-align: center">
+                                            <button class="btn btn-primary waves-effect waves-light" onclick="updatePhotoInfo()">提交</button>
+                                            <button class="btn btn-default waves-effect" type="button" onclick="javascript:history.back(-1);">返回</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer text-right">
+                    2020 © iss-cloud-disk.
+                </footer>
+            </div>
+        </div>
+
+        <div th:include="common/commonjs :: commonjs"></div>
+
+        <!-- bootstrap table js -->
+        <script th:src="@{/bootstrap/table/bootstrap-table.min.js}"></script>
+        <script th:src="@{/bootstrap/table/bootstrap-table-zh-CN.min.js}"></script>
+
+        <!-- modal-effect js -->
+        <script th:src="@{/bootstrap/plugins/modal-effect/classie.js}"></script>
+        <script th:src="@{/bootstrap/plugins/modal-effect/modalEffects.js}"></script>
+
+        <!-- sweetalert js -->
+        <script th:src="@{/sweetalert/sweetalert.min.js}"></script>
+
+        <script>
+            $('#photo_sidebar').attr('src', '[[${#request.getContextPath()}]]/bootstrap/images/[[${session.user.photo}]]');
+            $('#photo_editPhoto').attr('src', '[[${#request.getContextPath()}]]/bootstrap/images/[[${session.user.photo}]]');
+
+            var v_photo ="";
+            $(document).click(function(e){
+                var v_id = $(e.target).attr('id');//获取当前点击事件的元素id属性
+                var click_src = $(e.target).attr('src');
+                $('#photo_editPhoto').attr('src', click_src);
+                $('#photo_editPhoto').attr('value', v_id);
+                v_photo = v_id;
+
+            });
+
+
+
+            function updatePhotoInfo() {
+                var v_id = $('#id').val();//获取当前点击事件的元素id属性
+                let params = {
+                    'id': v_id,
+                    'photo':  v_photo
+                }
+                $.ajax({
+                    url:'/disk/user/updatePhotoInfo',
+                    data:{
+                        id:params.id,
+                        photo: params.photo,
+                    },
+                    //dataType:"String",
+                    success:function(data){
+                        alert("修改成功");
+                        $("#sidebarphoto").attr('src',"http://localhost:8080/disk/bootstrap/images/"+params.photo);
+                        console.log(data);
+                    },
+                    error:function (data) {
+                        alert("修改失败");
+                        console.log(data);
+                    }
+                })
+
+
+                console.log('isEmpty(v_photo) : '+isEmpty(v_photo));
+                if (isEmpty(v_photo)) {
+                    swal('Tips!', 'Please select some data to operate !', 'info');
+                    return;
+                }
+
+                console.log('updatePhotoInfo : ');
+                console.log(params);
+
+                // alert('剩下的部分是调用后端某服务接口，修改用户表的图像字段，由同学们自己独立完成！');
+
+
+
+
+            }
+
+
+            function isEmpty(v) {
+                switch (typeof v) {
+                    case 'undefined':
+                        return true;
+                    case 'string':
+                        if (v.replace(/(^[ \t\n\r]*)|([ \t\n\r]*$)/g, '').length == 0) return true;
+                        break;
+                    case 'boolean':
+                        if (!v) return true;
+                        break;
+                    case 'number':
+                        if (0 === v || isNaN(v)) return true;
+                        break;
+                    case 'object':
+                        if (null === v || v.length === 0) return true;
+                        for (var i in v) {
+                            return false;
+                        }
+                        return true;
+                }
+                return false;
+            }
+
+        </script>
+
+    </body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+    </head>
+    <body>
+        <th:block th:fragment="uploadFile">
+            <div class="col-md-12">
+                <div id="fileModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                    ×
+                                </button>
+                                <h4 class="modal-title" id="fileModalLabel">上传文件</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form id="fileForm" class="form-horizontal" role="form" enctype="multipart/form-data">
+                                    <!-- 如果是在自定义文件夹下上传文件，需要指定父id -->
+                                    <input type="hidden" name="pid" value="0">
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">文件路径</label>
+                                        <div class="col-md-10">
+                                            <input id="filePath" type="text" name="filePath" class="form-control" th:value="${session.user.getPath()}" readonly="readonly">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">选择文件</label>
+                                        <div class="col-md-10">
+                                            <div class="input-group m-t-12">
+                                                <input id="file" type="file" name="file" style="display:none" onchange="reFile(this)">
+                                                <input id="refile" type="text" name="fileName" class="form-control" readonly="readonly" placeholder="Please choose file ... ">
+                                                <span class="input-group-btn">
+                                                     <button onclick="javascript:$('#file').click();" type="button" class="btn waves-effect waves-light btn-primary">Select</button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">文件类型</label>
+                                        <div class="col-md-10">
+                                            <div class="input-group m-t-12">
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="inlineRadio1" value="1" name="fileType">
+                                                    <label for="inlineRadio1"> 图片 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="inlineRadio2" value="2" name="fileType">
+                                                    <label for="inlineRadio2"> 文档 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="inlineRadio3" value="3" name="fileType">
+                                                    <label for="inlineRadio3"> 音乐 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="inlineRadio4" value="4" name="fileType">
+                                                    <label for="inlineRadio4"> 视频 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="inlineRadio5" value="6" name="fileType">
+                                                    <label for="inlineRadio5"> 其他 </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">上传用户</label>
+                                        <div class="col-md-10">
+                                            <input type="text" name="user.username" class="form-control" readonly="readonly" th:value="${session.user.getUsername()}">
+                                            <input type="hidden" name="user.id" class="form-control" th:value="${session.user.getId()}">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Close</button>
+                                <button onclick="fileUpload()" type="button" class="btn btn-primary waves-effect waves-light">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+    </body>
+</html>

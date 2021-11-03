@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+    </head>
+    <body>
+        <th:block th:fragment="sidebar">
+            <div class="sidebar-inner slimscrollleft" style="position: relative">
+                <div class="user-details">
+                    <div class="pull-left">
+                        <img id="sidebarphoto" th:src="@{/bootstrap/images/{photo}(photo=${session.user.photo})}" alt="" class="thumb-md img-circle">
+                    </div>
+                    <div class="user-info">
+                        <div class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">[[${session.user.username}]] <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a th:href="@{/forward(html=updateUser)}"><i class="md md-timer-auto"></i> 个人信息
+                                        <div class="ripple-wrapper"></div>
+                                    </a>
+                                </li>
+                                <li>
+<!--                                    <a href="javascript:void(0)"><i class="md md-photo-camera"></i> 更换头像</a>-->
+                                    <a th:href="@{/forward(html=editPhoto)}"><i class="md md-photo-camera"></i> 更换头像</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/logout}"><i class="md md-settings-power"></i> 注销</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <p class="text-muted m-0" th:text="${session.user.userRole.name}"></p>
+
+                    </div>
+                </div>
+                <!--- Divider -->
+                <div id="sidebar-menu">
+                    <ul>
+                        <li>
+                            <a th:href="@{/index}" class="waves-effect waves-light active">
+                                <i class="md md-home"></i><span> 首页 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/forward(html=users)}" class="waves-effect waves-light">
+                                <i class="md md-people"></i><span> 用户管理 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/forward(html=files)}" class="waves-effect waves-light">
+                                <i class="md md-folder-open"></i><span> 文件管理 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/forward(html=collectFiles)}" class="waves-effect waves-light">
+                                <i class="md md-star-outline"></i><span> 我的收藏 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/forward(html=sharedFiles)}" class="waves-effect waves-light">
+                                <i class="md md-share"></i><span> 我的分享 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/forward(html=recoveryFiles)}" class="waves-effect waves-light">
+                                <i class="md md-delete"></i><span> 回收站 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="waves-effect waves-light">
+                                <i class="md md-brightness-low"></i><span> 系统配置 </span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div style="position:absolute;width:90%;height:30px;bottom:20px;margin:auto;left:0;right:0">
+                    <div class="progress" style="height:10px;margin-bottom: 10px;">
+                        <div class="progress-bar progress-bar-primary progress-bar-striped active" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" style="width: 82%"></div>
+                    </div>
+                    <div class="sr-only" style="display:flex;justify-content:space-between;width:100%;height:20px;position:relative">
+                        <div>10G/100G</div>
+                        <div>
+                            <a href="#">扩容</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </th:block>
+    </body>
+</html>

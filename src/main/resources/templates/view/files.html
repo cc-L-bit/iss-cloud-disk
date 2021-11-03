@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <th:block th:include="common/commoncss :: commoncss"/>
+        <!-- bootstrap table css -->
+        <link th:href="@{/bootstrap/table/bootstrap-table.min.css}" rel="stylesheet" type="text/css">
+        <!-- modal css -->
+        <link th:href="@{/bootstrap/plugins/modal-effect/component.css}" rel="stylesheet" type="text/css">
+        <!-- tree css -->
+        <link th:href="@{/treeview/bootstrap-treeview.css}" rel="stylesheet" type="text/css">
+
+        <link th:href="@{/bootstrap/plugins/jquery-multi-select/multi-select.css}" rel="stylesheet" type="text/css">
+    </head>
+
+    <body class="fixed-left">
+
+        <!-- Begin page -->
+        <div id="wrapper">
+            <!-- Top Bar Start -->
+            <div th:include="common/topbar :: topbar" class="topbar"></div>
+            <!-- Top Bar End -->
+
+            <!-- Left Sidebar Start -->
+            <div th:include="common/sidebar :: sidebar" class="left side-menu"></div>
+            <!-- Left Sidebar End -->
+
+            <!-- right Content Start -->
+            <div class="content-page">
+                <!-- Start content -->
+                <div class="content">
+                    <!-- Start container -->
+                    <div class="container">
+
+                        <!-- Page-center -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" style="display: flex;justify-content: space-between;align-items: center;">
+                                        <h3 id="pathText" class="panel-title">全部文件</h3>
+                                        <!-- 全文检索 -->
+                                        <form class="form-inline" role="form">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" placeholder="search keywords ... ">
+                                            </div>
+                                            <button type="button" class="btn waves-effect waves-light btn-primary">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <!-- 数据表格 -->
+                                            <div id="toolbar" class="toolbar">
+                                                <button id="btn_upload" class="btn btn-default" onclick="openModal('filePath','fileModal')">
+                                                    <span class="md md-file-upload" aria-hidden="true"/>&nbsp;上传文件
+                                                </button>
+                                                <button id="btn_delete" class="btn btn-default" onclick="deleteFiles()">
+                                                    <span class="fa fa-trash-o" aria-hidden="true"/>&nbsp;批量删除
+                                                </button>
+                                                <button id="btn_mkdir" class="btn btn-default" onclick="openModal('mkdirPath','mkdirModal')">
+                                                    <span class="md md-folder-open" aria-hidden="true"/>&nbsp;新建文件夹
+                                                </button>
+                                                <button id="btn_rename" class="btn btn-default" onclick="rename()">
+                                                    <span class="md md-repeat" aria-hidden="true"/>&nbsp;重命名
+                                                </button>
+                                                <button id="btn_move" class="btn btn-default" onclick="openTree()">
+                                                    <span class="md md-arrow-forward" aria-hidden="true"/>&nbsp;移动到
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 刷新页面，初始化HDFS的路径 type="hidden" -->
+                        <input id="currentPath" hidden="hidden" th:value="${session.user.getPath()}"/>
+
+                        <!-- uploadFile form -->
+                        <div th:include="view/uploadFile :: uploadFile" class="row"></div>
+
+                        <!-- mkdir form -->
+                        <div th:include="view/mkdir :: mkdir" class="row"></div>
+
+                        <!-- tree -->
+                        <div th:include="view/fileTree :: fileTree" class="row"></div>
+
+                        <!-- share -->
+                        <div th:include="view/chooseUser :: chooseUser" class="row"></div>
+
+                    </div> <!-- container -->
+                </div> <!-- content -->
+
+                <footer class="footer text-right">
+                    2021 © iss-cloud-disk.
+                </footer>
+
+            </div>
+            <!-- right Content Start End -->
+        </div>
+
+        <div th:include="common/commonjs :: commonjs"></div>
+
+        <!-- bootstrap table js -->
+        <script th:src="@{/bootstrap/table/bootstrap-table.min.js}"></script>
+        <script th:src="@{/bootstrap/table/bootstrap-table-zh-CN.min.js}"></script>
+
+        <!-- modal-effect js -->
+        <script th:src="@{/bootstrap/plugins/modal-effect/classie.js}"></script>
+        <script th:src="@{/bootstrap/plugins/modal-effect/modalEffects.js}"></script>
+
+        <!-- sweetalert js -->
+        <script th:src="@{/sweetalert/sweetalert.min.js}"></script>
+
+        <!-- tree js -->
+        <script th:src="@{/treeview/bootstrap-treeview.js}"></script>
+
+        <script th:src="@{bootstrap/plugins/jquery-multi-select/jquery.multi-select.js}"></script>
+        <script th:src="@{bootstrap/plugins/jquery-multi-select/jquery.quicksearch.js}"></script>
+
+        <script>
+
+            $(function () {
+
+                // 文件类型图标
+                var images = [
+                    'md md-image', 'md md-insert-drive-file',
+                    'md md-headset', 'md md-local-movies',
+                    'md md-folder-open', 'md md-sim-card-alert'
+                ];
+
+                $('#fileTable').bootstrapTable({
+                    url: '[[${#request.getContextPath()}]]/file/getFiles',
+                    cache: false, sidePagination: 'server', toolbar: "#toolbar", uniqueId: "id",
+                    pagination: true, pageNumber: 1, pageSize: 10, pageList: [10, 20, 30, 40, 50],
+                    columns: [
+                        {checkbox: true, visible: true},                  //是否显示复选框
+                        {field: 'id', title: '文件编号', align: 'center'},
+                        {
+                            field: 'fileName', title: '文件名称', align: 'left', formatter: function (value, row, index) {
+                                var img = '<span class="' + images[row.fileType - 1] + '" aria-hidden="true"/>&nbsp;&nbsp;';
+                                if (row.isCollect == 1) {
+                                    img = img + '<span class="md md-star" aria-hidden="true"/>';
+                                }
+                                if (row.fileType == 5) {
+                                    return img + '<a href="javascript:getChilden(\'' + row.id + '\', \'' + row.filePath + '\', \'' + value + '\')">' + value + '</a>';
+                                }
+                                return img + '<a href="[[${#request.getContextPath()}]]/file/download?fileName=' + value + '&filePath=' + row.filePath + '">' + value + '</a>';
+                            }
+                        },
+                        {
+                            field: 'fileSize', title: '文件大小', align: 'left', formatter: function (value, row, index) {
+                                return row.fileType == 5 ? '-' : value;
+                            }
+                        },
+                        {
+                            field: 'fileType', title: '文件类型', align: 'center',
+                            formatter: function (value, row, index) {
+                                var type = '';
+                                switch (value) {
+                                    case 1 :
+                                        type = '图片';
+                                        break;
+                                    case 2 :
+                                        type = '文档';
+                                        break;
+                                    case 3 :
+                                        type = '音乐';
+                                        break;
+                                    case 4 :
+                                        type = '视频';
+                                        break;
+                                    case 5 :
+                                        type = '其他';
+                                        break;
+                                    default :
+                                        type = '未知类型';
+                                }
+                                return type;
+                            }
+                        },
+                        {field: 'filePath', title: '文件路径', align: 'left'},
+                        {field: 'user.username', title: '上传用户', align: 'left'},
+                        {field: 'createTime', title: '上传时间', align: 'left'},
+                        {
+                            field: 'id', title: '操作', align: 'center', formatter: function (value, row, index) {
+                                return '<a href="#" onclick="collectFile(\'' + value + '\')">收藏</a>&nbsp;&nbsp;'
+                                    + '<a href="#" onclick="shareFile(\'' + value + '\')">分享</a>';
+                            }
+                        }
+                    ],
+                    queryParams: function (params) {
+                        //这里的键的名字和控制器的变量名必须一致，这边改动，控制器也需要改成一样的
+                        params = {
+                            pageNum: (params.offset / params.limit) + 1,    //页码
+                            pageSize: params.limit,                         //页面大小
+                            currentUser: '[[${session.user.getId()}]]'
+                        };
+                        return params;
+                    }
+                });
+
+            });
+
+            var folders = [];
+
+            // 在页面顶部生成文件夹路径，并展开文件夹下的所有文件
+            function getChilden(id, filePath, fileName) {
+                let folder = {
+                    id: id,
+                    filePath: filePath,
+                    fileName: fileName
+                };
+                folders.push(folder);
+
+                let html = createHtml();
+
+                $('#pathText').html('');
+                $('#pathText').html(html);
+                getFilesByPid(id, filePath);
+            }
+
+            // 点击全路径中的某一子路径
+            function clickPath(obj) {
+                for (let i = 0; i < folders.length; i++) {
+                    if (obj.id == folders[i].id) {
+                        folders.splice(i + 1, folders.length - i - 1);
+                    }
+                }
+
+                let html = createHtml();
+
+                $('#pathText').html('');
+                $('#pathText').html(html);
+                getFilesByPid(obj.id, $(obj).data('path'))
+            }
+
+            // 返回上一级
+            function goBack() {
+                if (folders.length == 1) {
+                    window.location.href = '[[${#request.getContextPath()}]]/forward?html=files';
+                } else {
+                    folders.pop();
+                }
+                let html = createHtml();
+                let obj = folders[folders.length - 1];
+                $('#pathText').html('');
+                $('#pathText').html(html);
+                getFilesByPid(obj.id, obj.filePath);
+
+            }
+
+            // 生成顶部文件夹路径公共方法 一
+            function createHtml() {
+                let allFilesPath = '<a href="[[${#request.getContextPath()}]]/forward?html=files">全部文件</a>';
+                let goBack = '<a href="javascript:#;" onClick="goBack()">返回上一级</a>';
+                let split = '<div style="display: inline">&nbsp;&gt;&nbsp;</div>';
+
+                let html = '';
+                if (folders.length == 1) {
+                    html = split + createPath(folders[0].id, folders[0].filePath, folders[0].fileName, true);
+                } else if (folders.length > 5) {
+                    let last = folders.length - 1;
+                    for (let i = folders.length - 4; i < last; i++) {
+                        html += split + createPath(folders[i].id, folders[i].filePath, folders[i].fileName, false);
+                    }
+                    html += split + createPath(folders[last].id, folders[last].filePath, folders[last].fileName, true);
+                    allFilesPath = ' ... ';
+                } else {
+                    for (let i = 0; i < folders.length; i++) {
+                        if (i != folders.length - 1) {
+                            html += split + createPath(folders[i].id, folders[i].filePath, folders[i].fileName, false);
+                        } else {
+                            html += split + createPath(folders[i].id, folders[i].filePath, folders[i].fileName, true);
+                        }
+                    }
+                }
+                return goBack + ' | ' + allFilesPath + html;
+            }
+
+            // 生成顶部文件夹路径公共方法 二
+            function createPath(id, filePath, fileName, flag) {
+                let span = '<span id="' + id + '" data-path="' + filePath + '">' + fileName + '</span>';
+                let a = '<a id="' + id + '" href="javascript:#;" onClick="clickPath(this)" data-path="' + filePath + '">' + fileName + '</a>'
+                return flag ? span : a;
+            }
+
+            /**
+             * 展开文件下的所有文件
+             * @param id 当前文件夹 id
+             * @param filePath 当前文件夹 hdfs 路径
+             */
+            function getFilesByPid(id, filePath) {
+                $('#currentPath').val(filePath);
+                // $('[name="filePath"]').attr('value', filePath);
+                $('[name="pid"]').attr('value', id);
+                let params = {
+                    url: '[[${#request.getContextPath()}]]/file/getFilesByPid?pid=' + id,
+                }
+                $('#fileTable').bootstrapTable('refresh', params);
+            }
+
+            // 上传
+            function fileUpload() {
+                // 上传文件为空校验，若为空不让上传
+                if ($('#refile').val().length == 0) {
+                    swal('Tips!', 'Please select some file to upload !', 'info');
+                    return;
+                }
+
+                $.ajax({
+                    url: "[[${#request.getContextPath()}]]/file/insertFile",
+                    type: "POST",
+                    data: new FormData($('#fileForm')[0]),
+                    processData: false,// 告诉 jQuery 不要去处理发送的数据(必须设置)
+                    contentType: false, // 告诉 jQuery 不要去设置Content-Type请求头（必须设置）
+                    dataType: "json",
+                    success: function (result) {
+                        swal("Good Job!", result.msg, "success");
+                        $('#fileModal').modal('hide');
+                        $('#fileForm')[0].reset();
+                        $('#fileTable').bootstrapTable('refresh');
+                    }
+                });
+            }
+
+            // 新建文件夹
+            function mkdir() {
+                let data = {};
+                $.each($('#mkdirForm').serializeArray(), function (i, v) {
+                    data[v.name] = v.value;
+                })
+                $.post('[[${#request.getContextPath()}]]/file/mkdir', data, function (result) {
+                    if (result.operate) {
+                        swal("Good Job!", result.msg, "success");
+                        $('#mkdirModal').modal('hide');
+                        $('#mkdirForm')[0].reset();
+                        $('#fileTable').bootstrapTable('refresh');
+                    }else{
+                        swal('Failure!', result.msg);
+                    }
+                }, 'json');
+            }
+
+            // 重命名
+            function rename() {
+                let rows = $('#fileTable').bootstrapTable('getSelections');
+                if (rows.length == 0 || rows.length > 1) {
+                    swal("Please select single data to operate !");
+                    return;
+                }
+                swal("Input new filename:", {content: "input",}).then((value) => {
+                    let newPath = '';
+                    if (rows[0].fileType == 5) {
+                        newPath = $('#currentPath').val() + '/' + value;
+                    } else {
+                        newPath = $('#currentPath').val() + '/' + value + rows[0].fileName.slice(rows[0].fileName.lastIndexOf("."))
+                    }
+                    let params = {
+                        id: rows[0].id,
+                        pid: rows[0].pid,
+                        fileName: rows[0].fileName,
+                        filePath: rows[0].filePath,
+                        fileType: rows[0].fileType,
+                        newPath: newPath
+                    }
+                    $.get('[[${#request.getContextPath()}]]/file/rename', params, function (result) {
+                        if (result.operate) {
+                            $('#fileTable').bootstrapTable('refresh');
+                        }
+                        swal(result.msg);
+                    }, 'json');
+                });
+            }
+
+            // 批量删除文件
+            function deleteFiles() {
+                let rows = $('#fileTable').bootstrapTable('getSelections');
+                if (rows.length == 0) {
+                    swal('Tips!', 'Please select some data to operate !', 'info');
+                    return;
+                }
+                let ids = '';
+                for (let i = 0; i < rows.length; i++) {
+                    ids += ',' + rows[i].id;
+                }
+                ids = ids.substring(1);
+                swal(getSwalParams()).then((isConfirm) => { // true or falsed
+                    let url = isConfirm ? '[[${#request.getContextPath()}]]/file/deleteFile' : '[[${#request.getContextPath()}]]/file/recoveryFile';
+                    $.get(url, {ids}, function (result) {
+                        if (result.operate) {
+                            swal("Success!", result.msg, 'success');
+                            $('#fileTable').bootstrapTable('refresh');
+                        } else {
+                            swal('Failure!', result.msg);
+                        }
+                    }, 'json');
+                });
+            }
+
+            // 收藏
+            function collectFile(id) {
+
+                $.get('/disk/file/collectFile', {id: id}, function (result) {
+                    if (result.operate) {
+                        swal("Deleted!", result.msg, "success");
+                        $('#fileTable').bootstrapTable('refresh');
+                    } else {
+                        swal("Failure!", result.msg);
+                    }
+                }, 'json');
+            }
+
+            // 文件移动
+            function move() {
+                let nodes = $('#fileTree').treeview('getSelected');
+                if (nodes.length == 0) {
+                    swal('Warning', 'Please select single data to operate !');
+                    return;
+                }
+                let params = {
+                    myFiles: $('#fileTable').bootstrapTable('getSelections'),
+                    newFile: {id: nodes[0].id, filePath: nodes[0].filePath}
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: '[[${#request.getContextPath()}]]/file/move',
+                    data: JSON.stringify(params),
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    success: function (result) {
+                        if (result.operate) {
+                            $('#fileTable').bootstrapTable('refresh');
+                            swal('Operation Completed', result.msg, "success");
+                        } else {
+                            swal('Operation Completed', result.msg + result.data);
+                        }
+                        $('#treeModal').modal('hide');
+                    }
+                });
+            }
+
+            // 打开文件树
+            function openTree() {
+                let rows = $('#fileTable').bootstrapTable('getSelections');
+                if (rows.length == 0) {
+                    swal('Warning', 'Please select data to operate !');
+                    return;
+                }
+                $.get('[[${#request.getContextPath()}]]/file/getFolders', {pid: 0}, function (nodes) {
+                    $('#fileTree').treeview({
+                        data: [
+                            {
+                                text: '[[${session.user.getPath()}]]',
+                                href: '0',
+                                nodes: nodes
+                            }
+                        ]
+                        // ,
+                        // onNodeSelected: function (event, node) {
+                        //     debugger;
+                        //     if (node.nodes != undefined && node.nodes != null && node.nodes.length != 0) {
+                        //         $("#treeview").treeview("deleteNode", [node.nodeId, {silent: true}]);
+                        //     }
+                        //     $.get('[[${#request.getContextPath()}]]/file/getFolders', {pid: node.href}, function (nodes) {
+                        //         $('#treeview').treeview('appendNode', [node.nodeId, {nodes: nodes}])
+                        //     }, 'json');
+                        //     $('#treeview').treeview('expandNode', [node.nodeId, {levels: 1, silent: true}]);
+                        // }
+                    });
+                }, 'json');
+                $('#treeModal').modal('show');
+            }
+
+            // 打开表单模态框
+            function openModal(path, modal) {
+                $('#' + path).val($('#currentPath').val());
+                $('#' + modal).modal('show');
+            }
+
+            // 回显文件名，并判断文件类型
+            function reFile(obj) {
+                let filename = obj.value.substring(obj.value.lastIndexOf('\\') + 1);
+                $('#refile').val(filename);
+
+                let type = filename.slice(filename.lastIndexOf(".") + 1).toLowerCase();
+                if ('jpg,jpeg,png,gif'.indexOf(type) != -1) {
+                    $('input:radio[value=1]').attr("checked", true);
+                } else if ('txt,doc,docx,pdf,ppt,pptx,xls,xlsx'.indexOf(type) != -1) {
+                    $('input:radio[value=2]').attr("checked", true);
+                } else if ('mp3,wma'.indexOf(type) != -1) {
+                    $('input:radio[value=3]').attr("checked", true);
+                } else if ('avi,rmvb,mov,mp4,flv'.indexOf(type) != -1) {
+                    $('input:radio[value=4]').attr("checked", true);
+                } else {
+                    $('input:radio[value=6]').attr("checked", true);
+                }
+
+                $('#filePath').val($('#currentPath').val() + '/' + filename);
+            }
+
+            // 提示框公共参数
+            function getSwalParams() {
+                return {
+                    title: "Are you sure?",
+                    icon: "warning",
+                    buttons: ["丢回收站！", "狠心删除！"],
+                    dangerMode: true
+                }
+            }
+
+        </script>
+    </body>
+</html>

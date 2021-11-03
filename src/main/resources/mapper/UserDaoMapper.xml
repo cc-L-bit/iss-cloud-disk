@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iss.cloud.disk.dao.UserDao">
+
+    <resultMap id="userMap" type="User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="sex" column="sex"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="birthday" column="birthday"/>
+        <result property="idCard" column="idCard"/>
+        <result property="path" column="path"/>
+        <result property="size" column="size"/>
+        <result property="usedSize" column="usedSize"/>
+        <result property="photo" column="photo"/>
+        <association property="userRole" javaType="Role">
+            <id property="id" column="roleid"/>
+            <result property="name" column="name"/>
+        </association>
+    </resultMap>
+
+    <sql id="select">
+        select
+            a.id, a.username, a.password, a.sex, a.phone, a.email, a.birthday, a.idCard, b.name, a.path, a.size, a.usedSize, a.photo, b.id as roleid
+        from user a left join role b on a.role = b.id
+    </sql>
+
+    <select id="login" resultMap="userMap">
+        <include refid="select"/>
+        where a.username = #{username} and a.password = #{password}
+    </select>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from user
+    </select>
+
+    <select id="getUser" parameterType="java.lang.Integer" resultMap="userMap">
+        <include refid="select"/>
+        where a.id = #{id}
+    </select>
+
+    <select id="getUsers" resultMap="userMap">
+        <include refid="select"/>
+        limit #{start}, #{pageSize}
+    </select>
+
+    <select id="chooseUser" resultType="User">
+       select id, username from user where role = 1 and id != #{id}
+    </select>
+
+    <insert id="insertUser" parameterType="User">
+        insert into user
+            (username, password, sex, phone, email, birthday, idCard, role, path, size, usedSize, photo)
+        values
+            (#{username}, #{password}, #{sex}, #{phone}, #{email}, #{birthday}, #{idCard}, #{userRole.id}, #{path}, #{size}, #{usedSize}, #{photo})
+    </insert>
+
+    <update id="updateUser" parameterType="User">
+        update user set password = #{password}, sex = #{sex}, phone = #{phone}, email = #{email}, birthday = #{birthday} where id = #{id}
+    </update>
+
+    <update id="updatePath" parameterType="User">
+        update user set path = #{path} where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete t from user t where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+         AND t.username != 'admin'
+    </delete>
+
+    <update id="grantAuthorization" parameterType="java.util.Map">
+        update user t set role = #{roleId} where id != #{currentUserId}  AND  id in
+        <foreach collection="grantUserIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        AND t.username != 'admin'
+    </update>
+
+    <update id="updatePhotoInfo" parameterType="User">
+        update user t set photo = #{photo} where id = #{id}
+    </update>
+</mapper>

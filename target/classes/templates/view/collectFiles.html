@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head th:include="common/commoncss :: commoncss">
+        <!-- bootstrap table css -->
+        <link href="@{/bootstrap/table/bootstrap-table.min.css" rel="stylesheet" type="text/css">
+        <!-- modal css -->
+        <link href="@{/bootstrap/plugins/modal-effect/component.css" rel="stylesheet" type="text/css">
+        <!-- sweetalert css -->
+        <link href="@{/bootstrap/plugins/sweetalert/sweetalert.css" rel="stylesheet" type="text/css">
+    </head>
+
+    <body class="fixed-left">
+
+        <!-- Begin page -->
+        <div id="wrapper">
+
+            <!-- Top Bar Start -->
+            <div th:include="common/topbar :: topbar" class="topbar"></div>
+            <!-- Top Bar End -->
+
+            <!-- Left Sidebar Start -->
+            <div th:include="common/sidebar :: sidebar" class="left side-menu"></div>
+            <!-- Left Sidebar End -->
+
+            <!-- right Content Start -->
+            <div class="content-page">
+                <!-- Start content -->
+                <div class="content">
+                    <div class="container">
+
+                        <!-- Page-Title -->
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h4 class="pull-left page-title">文件列表</h4>
+                                <ol class="breadcrumb pull-right">
+                                    <li>
+                                        <a href="#">ISS-Cloud-Disk</a>
+                                    </li>
+                                    <li class="active">我的收藏</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <table id="fileTable"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- End Row -->
+                    </div> <!-- container -->
+                </div> <!-- content -->
+
+                <footer class="footer text-right">
+                    2020 © iss-cloud-disk.
+                </footer>
+
+            </div>
+            <!-- right Content Start End -->
+
+        </div>
+        <!-- END page -->
+
+        <div th:include="common/commonjs :: commonjs"></div>
+
+        <!-- bootstrap table js -->
+        <script th:src="@{/bootstrap/table/bootstrap-table.min.js}"></script>
+        <script th:src="@{/bootstrap/table/bootstrap-table-zh-CN.min.js}"></script>
+
+        <!-- modal-effect js -->
+        <script th:src="@{/bootstrap/plugins/modal-effect/classie.js}"></script>
+        <script th:src="@{/bootstrap/plugins/modal-effect/modalEffects.js}"></script>
+
+        <!-- sweetalert js -->
+        <script th:src="@{/sweetalert/sweetalert.min.js}"></script>
+
+        <script>
+            // $ == jQuery
+            $(function () {
+                $('#fileTable').bootstrapTable({
+                    url: '[[${#request.getContextPath()}]]/file/getCollectFiles',
+                    method: 'get',
+                    cache: false,
+                    pagination: true,
+                    pageNumber: 1,                      //初始化加载第一页，默认第一页,并记录
+                    pageSize: 10,                     //每页的记录行数（*）
+                    pageList: [10, 25, 50, 100],        //可供选择的每页的行数（*）
+                    sidePagination: 'server',
+                    clickToSelect: true,
+                    uniqueId: "id",
+                    columns: [
+                        {checkbox: true, visible: true},                  //是否显示复选框
+                        {field: 'id', title: '文件编号', align: 'center'},
+                        {field: 'fileName', title: '文件名称', align: 'center'},
+                        {field: 'fileSize', title: '文件大小', align: 'center'},
+                        {
+                            field: 'fileType', title: '文件类型', align: 'center',
+                            formatter: function (value, row, index) {
+                                var type = '';
+                                switch (value) {
+                                    case 1 :
+                                        type = '图片';
+                                        break;
+                                    case 2 :
+                                        type = '文档';
+                                        break;
+                                    case 3 :
+                                        type = '音乐';
+                                        break;
+                                    case 4 :
+                                        type = '视频';
+                                        break;
+                                    case 5 :
+                                        type = '其他';
+                                        break;
+                                    default :
+                                        type = '未知类型';
+                                }
+                                return type;
+                            }
+                        },
+                        {field: 'filePath', title: '文件路径', align: 'center'},
+                        {field: 'user.username', title: '上传用户', align: 'center'},
+                        {field: 'createTime', title: '上传时间', align: 'center'},
+                        {
+                            field: 'id', title: '操作', align: 'center',
+                            formatter: function (value, row, index) {
+                                return '<a href="#" onclick="cancelCollect(\'' + value + '\')">取消收藏</a>';
+                            }
+                        }
+                    ],
+                    queryParams: function (params) {
+                        //这里的键的名字和控制器的变量名必须一致，这边改动，控制器也需要改成一样的
+                        params = {
+                            pageNum: (params.offset / params.limit) + 1,    //页码
+                            pageSize: params.limit     ,                    //页面大小
+                            currentUser: '[[${session.user.getId()}]]',
+                        };
+                        return params;
+                    }
+                });
+            });
+
+            function cancelCollect(id) {
+                swal({
+                    title: "Are you sure?",
+                    icon: "warning",
+                    dangerMode: true,
+                    buttons:{
+                        defeat:{
+                            text:"取消",
+                            value:"defeat",
+                        },
+                        confirm:{
+                            text:"确定",
+                            value:"confirm",
+                        }
+                    },
+                },).then(value =>  {
+                    switch (value) {
+                        case "defeat":
+                            break;
+                        case "confirm":
+                            $.get('/disk/file/cancelCollect', {id: id}, function (data) {
+                                if (data.operate) {
+                                    swal("Success!", data.msg, "success");
+                                    // refresh table
+                                    $('#fileTable').bootstrapTable('refresh');
+                                }
+                            }, 'json');
+                            break;
+                            default:
+                                console.log("没事。。。。");
+                    }
+                 });
+            }
+
+        </script>
+    </body>
+</html>

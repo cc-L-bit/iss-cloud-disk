@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+    </head>
+    <body>
+        <th:block th:fragment="chooseUser">
+            <div class="col-md-12">
+                <div id="chooseUserModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="chooseUserModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                    ×
+                                </button>
+                                <h4 class="modal-title" id="chooseUserModalLabel">选择用户</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div style="display:flex;justify-content: center">
+                                    <input id="fileId" type="hidden">
+                                    <select class="multi-select" multiple="multiple" id="chooseUser">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button onclick="share()" type="button" class="btn btn-primary waves-effect waves-light">Submit</button>
+                                <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function shareFile(id) {
+
+                    $('#fileId').val(id);
+                    $.get('[[${#request.getContextPath()}]]/user/chooseUser', {}, function (data) {
+                        let options = '';
+                        for (let i = 0; i < data.length; i++) {
+                            options += '<option value="' + data[i].id + '">' + data[i].username + '</option>';
+                        }
+                        $('#chooseUser').append(options);
+                        $('#chooseUser').multiSelect({
+                            selectableHeader: "<input type='text' class='form-control search-input' autocomplete='off' placeholder='search...'>",
+                            selectionHeader: "<input type='text' class='form-control search-input' autocomplete='off' placeholder='search...'>",
+                            afterInit: function (ms) {
+                                let that = this,
+                                    $selectableSearch = that.$selectableUl.prev(),
+                                    $selectionSearch = that.$selectionUl.prev(),
+                                    selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+                                    selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+
+                                that.qs1 = $selectableSearch.quicksearch(selectableSearchString).on('keydown', function (e) {
+                                    if (e.which === 40) {
+                                        that.$selectableUl.focus();
+                                        return false;
+                                    }
+                                });
+
+                                that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+                                    .on('keydown', function (e) {
+                                        if (e.which == 40) {
+                                            that.$selectionUl.focus();
+                                            return false;
+                                        }
+                                    });
+                            },
+                            afterSelect: function () {
+                                this.qs1.cache();
+                                this.qs2.cache();
+                            },
+                            afterDeselect: function () {
+                                this.qs1.cache();
+                                this.qs2.cache();
+                            }
+                        });
+                    }, 'json');
+
+                    $('#chooseUserModal').modal('show');
+                }
+
+                function share() {
+                    let options = $('.ms-elem-selection');
+                    let ids = '';
+                    for (let i = 0; i < options.length; i++) {
+                        if ($(options[i]).css('display') != 'none') {
+                            ids += ',' + options[i].id.substring(0, options[i].id.indexOf('-'));
+                        }
+                    }
+                    ids = ids.substring(1);
+                    let fileId = $('#fileId').val();
+                    $.get('[[${#request.getContextPath()}]]/file/shareFile', {ids, fileId}, function (result) {
+                        swal("Operated", result.msg, result.operate ? 'success' : 'info');
+                        $('#chooseUserModal').modal('hide');
+                    }, 'json');
+                }
+
+            </script>
+        </th:block>
+    </body>
+</html>

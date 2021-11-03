@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iss.cloud.disk.dao.FileDao">
+
+    <resultMap id="fileMap" type="MyFile">
+        <id property="id" column="id"/>
+        <result property="pid" column="pid"/>
+        <result property="fileName" column="fileName"/>
+        <result property="fileSize" column="fileSize"/>
+        <result property="fileType" column="fileType"/>
+        <result property="filePath" column="filePath"/>
+        <result property="isCollect" column="isCollect"/>
+        <result property="isRecovery" column="isRecovery"/>
+        <result property="createTime" column="createTime"/>
+        <association property="user" javaType="User">
+            <id property="id" column="userId"/>
+            <result property="username" column="username"/>
+        </association>
+    </resultMap>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from file
+        <where>
+            userId = #{userId}
+            <choose>
+                <when test="flag == 1">
+                    and isCollect = 1 and isRecovery = 0
+                </when>
+                <when test="flag == 2">
+                    and isRecovery = 1
+                </when>
+                <when test="flag == 3">
+                    and pid = #{pid} and isRecovery = 0
+                </when>
+                <otherwise>
+                    and isRecovery = 0 and pid = 0
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <sql id="joinColumn">
+        select a.id, a.pid, a.fileName, a.fileSize, a.fileType, a.filePath, a.isCollect, a.isRecovery, a.createTime, b.id as userId, b.username from file a left join user b on a.userId = b.id
+    </sql>
+
+    <select id="getFiles" resultMap="fileMap">
+        <include refid="joinColumn"/>
+        where a.isRecovery = 0 and a.pid = 0 and a.userId = #{userId} limit #{start}, #{pageSize}
+    </select>
+
+    <select id="getRecoveryFiles" resultMap="fileMap">
+        <include refid="joinColumn"/>
+        where a.isRecovery = 1 and a.userId = #{userId} limit #{start}, #{pageSize}
+    </select>
+
+    <select id="getCollectFiles" resultMap="fileMap">
+        <include refid="joinColumn"/>
+        where a.isCollect = 1 and a.userId = #{userId} limit #{start}, #{pageSize}
+    </select>
+
+    <select id="getFilesByPid" resultMap="fileMap">
+        <include refid="joinColumn"/>
+        where a.pid = #{pid} limit #{start}, #{pageSize}
+    </select>
+
+    <select id="getFile" resultMap="fileMap">
+        <include refid="joinColumn"/>
+        where a.id = #{id}
+    </select>
+
+    <select id="getFolders" parameterType="java.lang.Integer" resultType="Node">
+        select id, id as href, fileName as text, filePath from file where fileType = 5 and pid = #{pid} and userId = #{userId}
+    </select>
+
+    <select id="getFilesByIds" resultType="MyFile">
+        select id, fileName, filePath, fileType, pid from file where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getCountByType" resultType="java.util.Map">
+        select
+            sum(case fileType when '1' then total else 0 end) 'img',
+            sum(case fileType when '2' then total else 0 end) 'doc',
+            sum(case fileType when '3' then total else 0 end) 'music',
+            sum(case fileType when '4' then total else 0 end) 'radio'
+        from
+        (
+            select count(fileType) as total, fileType from file where userId = #{userId} GROUP BY fileType having filetype != 5
+        ) temp
+    </select>
+
+    <insert id="insertFile" parameterType="MyFile">
+        insert into file (pid, fileName, fileSize, fileType, filePath, isCollect, isRecovery, userId, createTime)
+        values (#{pid}, #{fileName}, #{fileSize}, #{fileType}, #{filePath}, #{isCollect}, #{isRecovery}, #{user.id}, #{createTime})
+    </insert>
+
+    <delete id="deleteFile" parameterType="java.lang.Integer">
+        delete from file where id = #{id}
+    </delete>
+
+    <delete id="delete" parameterType="java.lang.Integer">
+        delete from file where id = #{id}
+    </delete>
+
+    <update id="recoveryFile" parameterType="java.lang.Integer">
+        update file set isRecovery = 1 where id = #{id}
+    </update>
+
+    <update id="cancelRecovery" parameterType="java.lang.Integer">
+        update file set isRecovery = 0 where id = #{id}
+    </update>
+
+    <update id="collectFile" parameterType="java.lang.Integer">
+        update file set isCollect = 1 where id = #{id}
+    </update>
+
+    <update id="cancelCollect" parameterType="java.lang.Integer">
+        update file set isCollect = 0 where id = #{id}
+    </update>
+
+
+
+    <select id="exists" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*) from file where filePath = #{filePath}
+    </select>
+
+    <update id="rename" parameterType="MyFile">
+        update file set pid = #{pid}, filePath = #{filePath}, fileName = #{fileName} where id = #{id}
+    </update>
+
+    <update id="renameByFilePath" parameterType="java.lang.String">
+        update file set filePath = REPLACE(filePath, #{oldPath}, #{newPath}) where filePath like concat('%', #{oldPath}, '/%')
+    </update>
+
+</mapper>

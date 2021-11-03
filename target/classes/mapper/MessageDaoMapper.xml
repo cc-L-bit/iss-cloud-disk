@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iss.cloud.disk.dao.MessageDao">
+
+    <resultMap id="msgMap" type="Message">
+        <id property="id" column="id"/>
+        <result property="content" column="content"/>
+        <result property="createTime" column="createTime"/>
+        <result property="isRead" column="isRead"/>
+        <association property="fromUser" javaType="User">
+            <id property="id" column="fromId"/>
+            <result property="username" column="formName"/>
+        </association>
+        <association property="toUser" javaType="User">
+            <id property="id" column="toId"/>
+            <result property="username" column="toName"/>
+        </association>
+        <association property="file" javaType="MyFile">
+            <id property="id" column="fileId"/>
+            <result property="fileName" column="fileName"/>
+            <result property="filePath" column="filePath"/>
+        </association>
+    </resultMap>
+
+    <sql id="select">
+        select
+            a.id, a.content, a.fromUser as fromId, b.username as formName, a.toUser as toId, c.username as toName,
+            a.file as fileId, d.fileName, d.filePath, a.createTime, a.isRead
+        from message a
+        left join user b on a.fromUser = b.id
+        left join user c on a.toUser = c.id
+        left join file d on a.file = d.id
+    </sql>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from message where toUser = #{userId}
+        <if test="isRead != 3">
+            and isRead = #{isRead}
+        </if>
+    </select>
+
+    <select id="getMessage" parameterType="java.lang.Integer" resultMap="msgMap">
+        <include refid="select"/>
+        where a.id = #{id}
+    </select>
+
+    <select id="getMessages" resultMap="msgMap">
+        <include refid="select"/>
+        where a.toUser = #{userId} order by a.isRead asc, a.createTime desc limit #{start}, #{pageSize}
+    </select>
+
+    <insert id="insert" parameterType="Message">
+        insert into message
+            (content, fromUser, toUser, file, createTime, isRead)
+        values
+            (#{content}, #{fromUser.id}, #{toUser.id}, #{file.id}, now(), 0)
+    </insert>
+
+    <update id="update">
+        update message set isRead = 1 where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from user where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

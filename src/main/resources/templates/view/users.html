@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <th:block th:include="common/commoncss :: commoncss"/>
+        <!-- bootstrap table css -->
+        <link th:href="@{/bootstrap/table/bootstrap-table.min.css}" rel="stylesheet" type="text/css">
+        <!-- modal css -->
+        <link th:href="@{/bootstrap/plugins/modal-effect/component.css}" rel="stylesheet" type="text/css">
+    </head>
+    <body class="fixed-left">
+
+        <!-- Begin page -->
+        <div id="wrapper">
+
+            <!-- Top Bar Start -->
+            <div th:include="common/topbar :: topbar" class="topbar"></div>
+            <!-- Top Bar End -->
+
+            <!-- Left Sidebar Start -->
+            <div th:include="common/sidebar :: sidebar" class="left side-menu"></div>
+            <!-- Left Sidebar End -->
+
+            <!-- right Content Start -->
+            <div class="content-page">
+                <!-- Start content -->
+                <div class="content">
+                    <div class="container">
+
+                        <!-- Page-Title -->
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h4 class="pull-left page-title">用户列表</h4>
+                                <ol class="breadcrumb pull-right">
+                                    <li>
+                                        <a href="#">ISS-Cloud-Disk</a>
+                                    </li>
+                                    <li class="active">用户管理</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div id="toolbar" class="toolbar">
+                                                <button id="btn_upload" class="btn btn-default" onclick="javascript:$('#userModal').modal('show')">
+                                                    <span class="md md-person-add" aria-hidden="true"/>&nbsp;新增用户
+                                                </button>
+                                                <button id="btn_download" class="btn btn-default" onclick="deletes()">
+                                                    <span class="md md-delete" aria-hidden="true"/> 删除用户
+                                                </button>
+                                                <button id="btn_mkdir" class="btn btn-default" onclick="grantAuthorization()">
+                                                    <span class="md md-swap-horiz" aria-hidden="true"/>&nbsp;用户授权
+                                                </button>
+                                            </div>
+                                            <table id="userTable"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- End Row -->
+                    </div> <!-- container -->
+                </div> <!-- content -->
+
+                <!-- User Modal -->
+                <div th:include="view/insertUser :: insertUser" class="row"></div>
+
+                <!-- Detail Modal -->
+                <div th:include="view/detailUser :: detailUser" class="row"></div>
+
+                <!-- footer -->
+                <footer class="footer text-right">
+                    2020 © iss-cloud-disk.
+                </footer>
+
+            </div>
+            <!-- right Content Start End -->
+
+        </div>
+        <!-- END page -->
+
+        <div th:include="common/commonjs :: commonjs"></div>
+
+        <!-- bootstrap table js -->
+        <script th:src="@{/bootstrap/table/bootstrap-table.min.js}"></script>
+        <script th:src="@{/bootstrap/table/bootstrap-table-zh-CN.min.js}"></script>
+
+        <!-- modal-effect js -->
+        <script th:src="@{/bootstrap/plugins/modal-effect/classie.js}"></script>
+        <script th:src="@{/bootstrap/plugins/modal-effect/modalEffects.js}"></script>
+
+        <!-- sweetalert js -->
+        <script th:src="@{/sweetalert/sweetalert.min.js}"></script>
+
+        <script>
+            $(function () {
+                $('#userTable').bootstrapTable({
+                    url: '[[${#request.getContextPath()}]]/user/getUsers',
+                    cache: false, sidePagination: 'server', toolbar: "#toolbar", uniqueId: "id",
+                    pagination: true, pageNumber: 1, pageSize: 10, pageList: [10, 20, 30, 40, 50],
+                    columns: [
+                        {checkbox: true, visible: true},                  //是否显示复选框
+                        {field: 'id', title: '编号', align: 'center'},
+                        {field: 'username', title: '姓名', align: 'center'},
+                        {
+                            field: 'sex', title: '性别', align: 'center',
+                            formatter: function (value, row, index) {
+                                return value == 1 ? '男' : '女';
+                            }
+                        },
+                        {field: 'phone', title: '手机', align: 'center'},
+                        {field: 'email', title: '邮箱', align: 'center'},
+                        {field: 'userRole.name', title: '用户角色', align: 'center'},
+                        {
+                            field: 'id', title: '操作', align: 'center',
+                            formatter: function (value, row, index) {
+                                return '<a href="#" onclick="detail(\'' + value + '\')">查看</a>';
+                            }
+                        }
+                    ],
+                    queryParams: function (params) {
+                        //这里的键的名字和控制器的变量名必须一致，这边改动，控制器也需要改成一样的
+                        params = {
+                            pageNum: (params.offset / params.limit) + 1,    //页码
+                            pageSize: params.limit                         //页面大小
+                        };
+                        return params;
+                    }
+                });
+            });
+
+            function insert() {
+                let data = {};
+                $.each($('#userForm').serializeArray(), function (i, v) {
+                    data[v.name] = v.value;
+                });
+                $.post('[[${#request.getContextPath()}]]/user/insertUser', data, function (result) {
+                    swal("Good Job!", result.msg, "success");
+                    $('#userModal').modal('hide');
+                    $('#userForm')[0].reset();
+                    $('#userTable').bootstrapTable('refresh');
+                }, 'json');
+            }
+
+            function deletes() {
+                let datas = $('#userTable').bootstrapTable('getSelections');
+                if (datas.length == 0) {
+                    swal('Warning', 'Please select data to operate !', 'warning');
+                    return;
+                }
+                let ids = '';
+                for (let i = 0; i < datas.length; i++) {
+                    ids += ',' + datas[i].id;
+                }
+                $.get('[[${#request.getContextPath()}]]/user/delete', {ids: ids.substring(1)}, function (result) {
+                    if (result.operate) {
+                        swal('Deleted!', result.msg, 'success');
+                        $('#userTable').bootstrapTable('refresh');
+                    } else {
+                        swal('Failure!', result.msg, 'error');
+                    }
+                }, 'json');
+            }
+
+            function detail(id) {
+                $('#space').css('width', '0%');
+                $.get('[[${#request.getContextPath()}]]/user/getUserInfo', {id}, function (user) {
+                    $('#photo').attr('src', '[[${#request.getContextPath()}]]/bootstrap/images/' + user.photo);
+                    $('#username').text(user.username);
+                    $('#sex').text(user.sex == 1 ? '男' : '女');
+                    $('#phone').text(user.phone);
+                    $('#email').text(user.email);
+                    $('#birthday').text(user.birthday);
+                    $('#idCard').text(user.idCard);
+                    $('#role').text(user.userRole.name);
+                    $('#path').text(user.path);
+                    $('#space').css('width', Math.round((user.usedSize / user.size) * 100) + '%');
+                }, 'json');
+
+                $('#detailModal').modal('show')
+            }
+
+
+
+            function grantAuthorization() {
+                var datas = $('#userTable').bootstrapTable('getSelections');
+                if (datas.length == 0) {
+                    swal('Warning', 'Please select data to operate !', 'warning');
+                    return;
+                }
+                let ids = '';
+                for (let i = 0; i < datas.length; i++) {
+                    ids += ',' + datas[i].id;
+                }
+                console.log(ids.substring(1));
+
+
+                swal({
+                    title: "Are you sure grantAuthorization?",
+                    icon: "warning",
+                    buttons : {
+                        button1: {
+                            text: "普通用户",
+                            value: 2,
+                        },
+                        button2: {
+                            text: "管理员",
+                            value: 1,
+                        }
+                    }
+
+                }).then((isConfirm) => {
+                    var roleId = '';
+                    if(isConfirm == 1){
+                        roleId = '1';
+                        console.log('你选择的是管理员');
+                    }else  if(isConfirm == 2){
+                        roleId = '2';
+                        console.log('你选择的是普通用户');
+                    }else{
+                        console.log('无选择');
+                        return;
+                    }
+
+                    $.post('[[${#request.getContextPath()}]]/user/grantAuthorization', {'ids':ids,'roleId':roleId}, function (result) {
+                        if (result.operate) {
+                            swal("Success!", result.msg, 'success');
+                            $('#userTable').bootstrapTable('refresh');
+                        } else {
+                            swal('Failure!', result.msg);
+                        }
+                    }, 'json');
+                });
+
+            }
+
+        </script>
+
+    </body>
+</html>
